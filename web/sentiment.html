@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>San Diego Sentiment</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+	.dropdown-menu li>a{color:white; font-size:1.2em;} 
+    .dropdown-menu>li{padding:1px;}
+    .dropdown-menu li>a:hover{background:white;}
+    </style>
+    <script src="js/json2.js"></script>
+    <script src="js/sha1.js"></script>
+    <script src="js/jquery.js?1.4.2"></script>
+    <script src="js/jquery.couch.js?0.11.0"></script>
+    <script src="js/jquery.dialog.js?0.11.0"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+	<script	src="https://www.google.com/jsapi"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+		var map;
+		var infoWindow = null;
+		var San_Diego = new google.maps.LatLng(32.760875, -117.114389);
+		
+		var marker_data_happy = new Array();
+		var marker_data_angry = new Array();
+		var marker_data_trust = new Array();
+		var marker_data_distrust = new Array();
+		var marker_data_suprise = new Array();
+		var marker_data_sad = new Array();
+		var marker_data_fear = new Array();
+		
+		var marker_happy = new Array();
+		var marker_angry = new Array();
+		var marker_trust = new Array();
+		var marker_distrust = new Array();
+		var marker_suprise = new Array();
+		var marker_sad = new Array();
+		var marker_fear = new Array();
+		
+		var happy_infowindow = new Array();
+		var angry_infowindow = new Array();
+		var trust_infowindow = new Array();
+		var distrust_infowindow = new Array();
+		var suprise_infowindow = new Array();
+		var sad_infowindow = new Array();
+		var fear_infowindow = new Array();
+		
+		var sentiment_button = new Array();
+		var sentiment_button_text = new Array();
+		var sentiment_list = new Array("happy","angry","trust","distrust","suprise","sad","fear");
+		
+		window.onload = get();
+		
+	<!-- get data from couchdb -->
+
+	function get(){
+		$.getJSON("http://115.146.84.141:5984/finaldata/_design/emotion/_view/emotion?&callback=?", handledata1);
+	
+		function handledata1(data){
+			//window.alert(data.rows[0].key);
+			//window.alert(data.rows[0].value[0]);
+			//window.alert(marker_data[0]);
+			//window.alert(data.rows[0].value[1]);
+			total_length = data.rows.length;
+			//window.alert(total_length);
+			for(i=0;i<total_length;i++){
+				if(data.rows[i].key == "happy"){//0
+					marker_data_happy.push(data.rows[i].value);
+				}else if(data.rows[i].key == "anger"){//1
+					marker_data_angry.push(data.rows[i].value);
+				}else if(data.rows[i].key == "trust"){//2
+					marker_data_trust.push(data.rows[i].value);
+				}else if(data.rows[i].key == "distrust"){//3
+					marker_data_distrust.push(data.rows[i].value);
+				}else if(data.rows[i].key == "surprise"){//4
+					marker_data_suprise.push(data.rows[i].value);
+				}else if(data.rows[i].key == "sad"){//5
+					marker_data_sad.push(data.rows[i].value);
+				}else if(data.rows[i].key == "fear"){//6
+					marker_data_fear.push(data.rows[i].value);
+				}
+			}
+		}
+	}
+
+
+    <!-- initialize map -->
+    function initialize() {
+
+		var mapOptions = {
+          center: San_Diego,
+          zoom: 11,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+		
+		myMapsId = 'zztGxRkF3tEA.koNC5bxObeYs';
+		new google.maps.KmlLayer({
+			map: map,
+			url: 'https://www.google.com/maps/d/kml?mid=' + myMapsId
+		});
+		
+		var roadStyles1 = [
+		{
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+		},
+		{
+			"featureType": "all",
+			"elementType": "labels.text.stroke",
+			"stylers": [
+				{
+					"color": "#000000"
+				},
+				{
+					"lightness": 13
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#144b53"
+				},
+				{
+					"lightness": 14
+				},
+				{
+					"weight": 1.4
+				}
+			]
+		},
+		{
+			"featureType": "landscape",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#08304b"
+				}
+			]
+		},
+		{
+			"featureType": "poi",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#0c4152"
+				},
+				{
+					"lightness": 5
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b434f"
+				},
+				{
+					"lightness": 25
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b3d51"
+				},
+				{
+					"lightness": 16
+				}
+			]
+		},
+		{
+			"featureType": "road.local",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "transit",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#146474"
+				}
+			]
+		},
+		{
+			"featureType": "water",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#021019"
+				}
+			]
+		}];	
+		var roadStyles2 = [
+		{
+			"featureType": "administrative",
+			"elementType": "labels.text.fill",
+			"stylers": [
+				{
+					"color": "#444444"
+				}
+			]
+		},
+		{
+			"featureType": "administrative.country",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"visibility": "on"
+				}
+			]
+		},
+		{
+			"featureType": "landscape",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#f2f2f2"
+				}
+			]
+		},
+		{
+			"featureType": "poi",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "road",
+			"elementType": "all",
+			"stylers": [
+				{
+					"saturation": -100
+				},
+				{
+					"lightness": 45
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "simplified"
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "labels.icon",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "transit",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "water",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#4694ec"
+				},
+				{
+					"visibility": "on"
+				}
+			]
+		}
+		];
+		var homeControlDiv = document.createElement('div');
+		var homeControl = new HomeControl(homeControlDiv, map);
+		homeControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
+	  
+		var centerControlDiv = document.createElement('div');
+		var centerControl = new CenterControl(centerControlDiv, map);
+		centerControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv);
+		
+		var styledMapOptions = {
+			name: 'San_Diego'
+		};
+		var RoadMapType = new google.maps.StyledMapType(
+			roadStyles2, styledMapOptions);
+		map.mapTypes.set('style', RoadMapType);
+		map.setMapTypeId('style');
+		
+		function HomeControl(controlDiv, map) {
+		  controlDiv.style.padding = '5px';
+		  var controlUI = document.createElement('div');
+		  controlUI.style.backgroundColor = 'white';
+		  controlUI.style.border='1px solid';
+		  controlUI.style.cursor = 'pointer';
+		  controlUI.style.textAlign = 'center';
+		  controlUI.title = 'Set map to center';
+		  controlDiv.appendChild(controlUI);
+		  var controlText = document.createElement('div');
+		  controlText.style.fontFamily='Arial,sans-serif';
+		  controlText.style.fontSize='13px';
+		  controlText.style.paddingLeft = '4px';
+		  controlText.style.paddingRight = '4px';
+		  controlText.innerHTML = '<b>Home<b>'
+		  controlUI.appendChild(controlText);
+
+		  // Setup click-event listener: simply set the map to London
+		  google.maps.event.addDomListener(controlUI, 'click', function() {
+			map.setZoom(10);
+			map.setCenter(San_Diego);
+			Ocean_Beach_information.close();
+			Pacific_Beach_information.close();
+			Hillcrest_information.close();
+			Mid_City_information.close();
+			La_Jolla_information.close();
+			Downtown_information.close();
+			Mission_Valley_information.close();
+			San_Ysidro_information.close();
+			Northeastern_information.close();
+		  });
+		}
+		
+		function CenterControl(controlDiv, map) {		  
+
+		for(i=0;i<7;i++){
+			// button style
+			sentiment_button[i] = document.createElement('div');
+			sentiment_button[i].style.backgroundColor = '#fff';
+		    sentiment_button[i].style.border = '2px solid #fff';
+		    sentiment_button[i].style.borderRadius = '3px';
+		    sentiment_button[i].style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+		    sentiment_button[i].style.cursor = 'pointer';
+		    sentiment_button[i].style.float = 'left';
+		    sentiment_button[i].style.marginBottom = '22px';
+			sentiment_button[i].style.width = '80px';
+			sentiment_button[i].style.marginLeft = '2px';
+		    sentiment_button[i].style.textAlign = 'center';
+		    sentiment_button[i].title = 'Click to recenter the map';
+		    controlDiv.appendChild(sentiment_button[i]);
+			// button text style
+			sentiment_button_text[i] = document.createElement('div');
+			sentiment_button_text[i].style.color = 'rgb(25,25,25)';
+			sentiment_button_text[i].style.fontFamily = 'Roboto,Arial,sans-serif';
+			sentiment_button_text[i].style.fontSize = '16px';
+			sentiment_button_text[i].style.lineHeight = '38px';
+			sentiment_button_text[i].style.paddingLeft = '5px';
+			sentiment_button_text[i].style.paddingRight = '5px';
+			sentiment_button_text[i].innerHTML = sentiment_list[i];
+			sentiment_button[i].appendChild(sentiment_button_text[i]);
+		}
+	
+		google.maps.event.addDomListener(sentiment_button[0], 'click', function() {
+			Visible_happy();
+		});
+		google.maps.event.addDomListener(sentiment_button[1], 'click', function() {
+			Visible_angry();
+		});
+		google.maps.event.addDomListener(sentiment_button[2], 'click', function() {
+			Visible_trust();
+		});
+		google.maps.event.addDomListener(sentiment_button[3], 'click', function() {
+			Visible_distrust();
+		});
+		google.maps.event.addDomListener(sentiment_button[4], 'click', function() {
+			Visible_suprise();
+		});
+		google.maps.event.addDomListener(sentiment_button[5], 'click', function() {
+			Visible_sad();
+		});
+		google.maps.event.addDomListener(sentiment_button[6], 'click', function() {
+			Visible_fear();
+		});
+	}
+
+		
+		function Visible_happy(){
+			for(i=0;i<marker_happy.length;i++){
+				marker_happy[i].setVisible(!marker_happy[i].getVisible());
+			}
+		}
+		function Visible_angry(){
+			for(i=0;i<marker_angry.length;i++){
+				marker_angry[i].setVisible(!marker_angry[i].getVisible());
+			}
+		}
+		function Visible_trust(){
+			for(i=0;i<marker_trust.length;i++){
+				marker_trust[i].setVisible(!marker_trust[i].getVisible());
+			}
+		}
+		function Visible_distrust(){
+			for(i=0;i<marker_distrust.length;i++){
+				marker_distrust[i].setVisible(!marker_distrust[i].getVisible());
+			}
+		}
+		function Visible_suprise(){
+			for(i=0;i<marker_suprise.length;i++){
+				marker_suprise[i].setVisible(!marker_suprise[i].getVisible());
+			}
+		}
+		function Visible_sad(){
+			for(i=0;i<marker_sad.length;i++){
+				marker_sad[i].setVisible(!marker_sad[i].getVisible());
+			}
+		}
+		function Visible_fear(){
+			for(i=0;i<marker_happy.length;i++){
+				marker_fear[i].setVisible(!marker_fear[i].getVisible());
+			}
+		}
+		function makeInfoWindowEvent(map, infowindow, marker) {  
+		   return function() {  
+			  infowindow.open(map, marker);
+		   };  
+		}
+		function makeInfoWindowEventClose(map, infowindow, marker) {  
+		   return function() {  
+			  infowindow.close(map, marker);
+		   };  
+		}
+		for(i=0;i<marker_data_happy.length;i++){
+				marker_happy[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_happy[i][0][1],marker_data_happy[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/happy.png'
+				});
+				happy_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_happy[i][1]
+				});
+				google.maps.event.addListener(marker_happy[i], 'mouseover', makeInfoWindowEvent(map, happy_infowindow[i], marker_happy[i]));
+				google.maps.event.addListener(marker_happy[i], 'mouseout', makeInfoWindowEventClose(map, happy_infowindow[i], marker_happy[i]));
+		}
+
+		for(i=0;i<marker_data_angry.length;i++){
+				marker_angry[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_angry[i][0][1],marker_data_angry[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/angry.png'
+				});
+				angry_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_angry[i][1]
+				});
+				google.maps.event.addListener(marker_angry[i], 'mouseover', makeInfoWindowEvent(map, angry_infowindow[i], marker_angry[i]));
+				google.maps.event.addListener(marker_angry[i], 'mouseout', makeInfoWindowEventClose(map, angry_infowindow[i], marker_angry[i]));
+		}
+		for(i=0;i<marker_data_trust.length;i++){
+				marker_trust[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_trust[i][0][1],marker_data_trust[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/trust.png'
+				});
+				trust_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_trust[i][1]
+				});
+				google.maps.event.addListener(marker_trust[i], 'mouseover', makeInfoWindowEvent(map, trust_infowindow[i], marker_trust[i]));
+				google.maps.event.addListener(marker_trust[i], 'mouseout', makeInfoWindowEventClose(map, trust_infowindow[i], marker_trust[i]));
+		}
+		for(i=0;i<marker_data_distrust.length;i++){
+				marker_distrust[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_distrust[i][0][1],marker_data_distrust[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/distrust.png'
+				});
+				distrust_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_distrust[i][1]
+				});
+				google.maps.event.addListener(marker_distrust[i], 'mouseover', makeInfoWindowEvent(map, distrust_infowindow[i], marker_distrust[i]));
+				google.maps.event.addListener(marker_distrust[i], 'mouseout', makeInfoWindowEventClose(map, distrust_infowindow[i], marker_distrust[i]));
+		}
+		for(i=0;i<marker_data_suprise.length;i++){
+				marker_suprise[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_suprise[i][0][1],marker_data_suprise[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/suprise.png'
+				});
+				suprise_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_suprise[i][1]
+				});
+				google.maps.event.addListener(marker_suprise[i], 'mouseover', makeInfoWindowEvent(map, suprise_infowindow[i], marker_suprise[i]));
+				google.maps.event.addListener(marker_suprise[i], 'mouseout', makeInfoWindowEventClose(map, suprise_infowindow[i], marker_suprise[i]));
+		}
+		for(i=0;i<marker_data_sad.length;i++){
+				marker_sad[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_sad[i][0][1],marker_data_sad[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/sad.png'
+				});
+				sad_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_sad[i][1]
+				});
+				google.maps.event.addListener(marker_sad[i], 'mouseover', makeInfoWindowEvent(map, happy_infowindow[i], marker_sad[i]));
+				google.maps.event.addListener(marker_sad[i], 'mouseout', makeInfoWindowEventClose(map, happy_infowindow[i], marker_sad[i]));
+		}
+		for(i=0;i<marker_data_fear.length;i++){
+				marker_fear[i] = new google.maps.Marker({
+				position:  new google.maps.LatLng(marker_data_fear[i][0][1],marker_data_fear[i][0][0]),
+				map: map,
+				visible : false,
+				icon: 'marker/fear.png'
+				});
+				fear_infowindow[i] = new google.maps.InfoWindow({
+					content: marker_data_fear[i][1]
+				});
+				google.maps.event.addListener(marker_fear[i], 'mouseover', makeInfoWindowEvent(map, fear_infowindow[i], marker_fear[i]));
+				google.maps.event.addListener(marker_fear[i], 'mouseout', makeInfoWindowEventClose(map, fear_infowindow[i], marker_fear[i]));
+		}
+		
+}
+    </script>
+  </head>
+  <body onload="initialize()">
+		
+<div id="menu "class="navbar-static-top" style="height:6.5%; padding-top:0px; font-size:1.5em; background-color:#eeeeee">
+  <div class="container">
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li class="dropdown "><a href="#" id="drop1" data-toggle="dropdown" class="dropdown-toggle" role="button">Scenario<b class="caret"></b></a>
+            <ul class="dropdown-menu" aria-labelledby="drop1" style="background-color:#eeeeee;">
+                <li ><a href="#" role="menuitem">Sentiment</a></li>
+                <li ><a href="site.html" role="menuitem">Site</a></li>
+                <li ><a href="language.html" role="menuitem">Language</a></li>
+            </ul>
+        </li>
+        <li><a href="Info.html">Info</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div>
+</div>
+<div id="map_canvas" style="width:100%; height:93.5%"></div>
+  </body>
+</html>

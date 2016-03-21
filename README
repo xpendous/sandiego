@@ -1,0 +1,73 @@
+##########  Dynamic Deployment:  sandiego_code/deploy/ 
+1. creating 4 virtual machines using the createVM.py 
+
+2. run the command under current directory:
+	ansible-playbook -i orchestration/inventory/hosts orchestration/playbooks/deploy.yml --user=ubuntu --private-key=sandiego.pem
+
+##########  Harvest tweets:  sandiego_code/harvester/ 
+1. specify one VM be the main machine, set the local.ini file on that machine to enable 
+   other three VMs access the CouchDB on the main VM
+
+2. modify the Server address of the the four streaming python files under the directory: 
+   and then put them into four VMs
+
+3. pastTweets.py are used to get tweets from past and then use those data to train a model
+
+4. filterTweets are a refiltering process to remove duplicates in the final CouchDB
+
+###PS: our python is based on 2.7.x
+
+
+###################### Tweets Analysis ########################
+
+##########  analysis of emotion:  sandiego_code/analysis/emotion
+1. Runn the jar File:
+   java -jar Classifying.jar <address of csv file> <name of database which will be classified> <name of the database where the outputs go into> <host of couch> <port> [<user>] [<pass>]
+
+2. Example:
+   java -jar Classifying.jar /home/lucas/Desktop/100000T.csv instances finaldata localhost 5984 
+
+3. About the code in code/src:
+   The main class is the Train.java. It calls two other classes: TrainAll and Reading. 
+   Run them with the same parameters of the jar file
+
+   TrainAll():
+     This class has a function called ExecuteTraining() which will train with a .csv (that  contains tweets in the same format of the file of Assignment 1 and its address is passed when the Class is created) all the tweets. Then, it will return a Classifier already trained.
+
+   Reading():
+     Firstly, it receives the Classifier as parameter. Secondly, it will run into the database to take: Tweets and coordinates. Lastly, the function putIntoDB() will export the Tweet with its emotion and coordinates into a database.
+
+###PS: The java app need java7, and java environment variables need to be configured
+       before run the jar file
+
+##########  analysis of language:  sandiego_code/analysis/language
+1. update_suburb.py
+   Use Geopy to identify the suburb (in address) name according to the coordinates of the tweets in ‘sandiegotweets’ database. Save the suburb name, language used and user id into a new database: lang_sub_final
+
+2. suburb_view.py
+   Submit a design document containing a map function and a reduce function to the lang_sub_final database. This view is used for data analysis for each suburb in aspects of language types and distribution. See more details in Report Section 3.4.1
+
+##########  analysis of site:  sandiego_code/analysis/site
+update_tour.py
+
+Find tweets containing keywords of the tourist attractions (site). Use the API to identify the attitude (positive/neutral/negative) of the tweets. Save the tweet attitude with its site name into a new database: tour_att
+
+Submit a design document with a map function and a reduce function which are used for calculating out the tweets number of each attitude for each place.
+
+See more details about the sentiment API in Report Section 3.3.1
+
+##########  Bayes analysis:  sandiego_code/analysis/train_model.py
+Given a large tweets dataset, this model is used to train a classifier, it works on small dataset,
+but the classification result is very bad. Due to the RAM limitation, we stop at this step, turn to ask for help using the WEB API for the model to classify the tweets
+
+
+##########  WEB APP:  sandiego_code/web
+Web application for our tweets analysis;
+1. All of the files under the directory must be put into apache page's directory
+
+2. Three CouchDB view files, finaldata.couch, lang_sub.couch and tour_att.couch should be put into
+  CouchDB view directory
+
+3. Access the WEB APP by entering the apache server address into web browser
+
+############# End #############

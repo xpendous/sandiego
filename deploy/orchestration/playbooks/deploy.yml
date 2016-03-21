@@ -1,0 +1,58 @@
+---
+- hosts: harvester
+  sudo: yes
+  sudo_user: root
+  tasks:
+    - name: update apt-get
+      apt: update_cache=yes
+
+    - name: install python-sklearn
+      apt: name=python-sklearn state=present
+
+    - name: install pip
+      easy_install: name=pip
+
+    - name: pip install tweepy
+      pip: name=tweepy
+
+    - name: pip install simplejson
+      pip: name=simplejson
+
+    - name: pip install couchdb
+      pip: name=couchdb
+
+    - name: pip install geopy
+      pip: name=geopy
+
+    - name: pip install unirest
+      pip: name=unirest
+
+    - name: pip install textblob
+      pip: name=textblob
+
+- hosts: web
+  sudo: yes
+  sudo_user: root
+  tasks:
+    - name: update apt-get
+      apt: update_cache=yes
+
+    - name: install apache2
+      apt: name=apache2 state=present
+
+    - name: install couchdb
+      apt: name=couchdb state=present
+
+    - name: install jre7
+      apt: name=default-jre state=present
+
+- hosts: database
+  sudo: yes
+  sudo_user: root
+  tasks:
+    - name: update apt-get
+      apt: update_cache=yes
+
+    - name: install couchdb
+      apt: name=couchdb state=present
+

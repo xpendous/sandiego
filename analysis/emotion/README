@@ -1,0 +1,14 @@
+Running the Jar File
+
+java -jar Classifying.jar <address of csv file> <name of database which will be classified> <name of the database where the outputs go into> <host of couch> <port> [<user>] [<pass>]
+
+Example:
+
+java -jar Classifying.jar /home/lucas/Desktop/100000T.csv instances finaldata localhost 5984 
+
+
+______________________________________________________________________________________________________
+
+Zip File
+
+The main class is the Train.java. It calls two other classes: TrainAll and Reading. Run it with the same parameters of the Jar File

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+	 .dropdown-menu li>a{color:white; font-size:1.2em;} 
+    .dropdown-menu>li{padding:1px;}
+    .dropdown-menu li>a:hover{background:white;}
+    </style>
+    <script src="js/json2.js"></script>
+    <script src="js/sha1.js"></script>
+    <script src="js/jquery.js?1.4.2"></script>
+    <script src="js/jquery.couch.js?0.11.0"></script>
+    <script src="js/jquery.dialog.js?0.11.0"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+	<script	src="https://www.google.com/jsapi"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+		var Balboa_Park_flag = 0;
+		var Sunset_Cliffs_flag = 0;
+		var Sandiego_Zoo_flag = 0;
+		var Lajolla_Cove_flag = 0;
+		var Sea_World_flag = 0;
+		var Midway_Museum_flag = 0;
+		var State_Historic_flag = 0;
+		var Carlsbad_flag = 0;
+		
+		var map;
+		var maxwidth = 450;
+		var infoWindow = null;
+		var San_Diego = new google.maps.LatLng(32.781316, -117.151468);
+		var latitude;
+		var longitude;
+		var latlng;
+			
+		var Balboa_Park_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Balboa_Park.jpg">',
+			maxWidth: maxwidth
+		});
+		var Sunset_Cliffs_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Sunset_Cliffs.jpg">',
+			maxWidth: maxwidth
+		});
+		var Sandiego_Zoo_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Sandiego_Zoo.jpg">',
+			maxWidth: maxwidth
+		});
+		var Lajolla_Cove_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Lajolla_Cove.jpg">',
+			maxWidth: maxwidth
+		});
+		var Sea_World_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Sea_World.jpg">',
+			maxWidth: maxwidth
+		});
+		var Midway_Museum_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Midway_Museum.jpg">',
+			maxWidth: maxwidth
+		});
+		var State_Historic_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/State_Historic.jpg">',
+			maxWidth: maxwidth
+		});	
+		var Carlsbad_infowindow = new google.maps.InfoWindow({
+			content: '<IMG BORDER="0" ALIGN="Left" SRC="site/Carlsbad.jpg">',
+			maxWidth: maxwidth
+		});	
+		var list_data = new Array();
+		for(i=0;i<8;i++){
+			list_data[i] = new Array();
+		}
+		var attitude = new Array();
+		for(i=0;i<8;i++){
+			attitude[i] = new Array();
+			for(j=0;j<3;j++){
+				attitude[i][j]=0;
+			}
+		}
+		window.onload = get();
+		
+		function get(){
+		$.getJSON("http://115.146.84.141:5984/tour_att/_design/tour/_view/get_tweets?group_level=1&callback=?", handledata1);
+	
+			function handledata1(data){
+				total_length = data.rows.length;
+				for(i=0;i<total_length;i++){
+					if(data.rows[i].key == "balboa"){//0
+						attitude[0][0] = data.rows[i].value.p;
+						attitude[0][1] = data.rows[i].value.neu;
+						attitude[0][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "carlsbad"){//1
+						attitude[1][0] = data.rows[i].value.p;
+						attitude[1][1] = data.rows[i].value.neu;
+						attitude[1][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "historicpark"){//2
+						attitude[2][0] = data.rows[i].value.p;
+						attitude[2][1] = data.rows[i].value.neu;
+						attitude[2][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "lajollacove"){//3
+						attitude[3][0] = data.rows[i].value.p;
+						attitude[3][1] = data.rows[i].value.neu;
+						attitude[3][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "midwaymuseum"){//4
+						attitude[4][0] = data.rows[i].value.p;
+						attitude[4][1] = data.rows[i].value.neu;
+						attitude[4][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "seaworld"){//5
+						attitude[5][0] = data.rows[i].value.p;
+						attitude[5][1] = data.rows[i].value.neu;
+						attitude[5][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "suncliffs"){//6
+						attitude[6][0] = data.rows[i].value.p;
+						attitude[6][1] = data.rows[i].value.neu;
+						attitude[6][2] = data.rows[i].value.neg;
+					}else if(data.rows[i].key == "zoo"){//7
+						attitude[7][0] = data.rows[i].value.p;
+						attitude[7][1] = data.rows[i].value.neu;
+						attitude[7][2] = data.rows[i].value.neg;
+					}
+				}
+				//window.alert(attitude[0][0]);
+				for(i=0;i<8;i++){
+					list_data[i].push(['Attitude', 'Number']);
+					list_data[i].push(['Positive',attitude[i][0]]);
+					list_data[i].push(['Neutral',attitude[i][1]]);
+					list_data[i].push(['Negative',attitude[i][2]]);
+				}
+				//window.alert(list_data[5]);
+			}
+		}
+		
+		var Balboa_Park_information = new google.maps.InfoWindow();//33.1227955,-117.3172609
+		var Sunset_Cliffs_information = new google.maps.InfoWindow();
+		var Sandiego_Zoo_information = new google.maps.InfoWindow();
+		var Lajolla_Cove_information = new google.maps.InfoWindow();
+		var Sea_World_information = new google.maps.InfoWindow();
+		var Midway_Museum_information = new google.maps.InfoWindow();
+		var State_Historic_information = new google.maps.InfoWindow();
+		var Carlsbad_information = new google.maps.InfoWindow();
+		
+		function HomeControl(controlDiv, map) {
+		  controlDiv.style.padding = '5px';
+		  var controlUI = document.createElement('div');
+		  controlUI.style.backgroundColor = 'white';
+		  controlUI.style.border='1px solid';
+		  controlUI.style.cursor = 'pointer';
+		  controlUI.style.textAlign = 'center';
+		  controlUI.title = 'Set map to center';
+		  controlDiv.appendChild(controlUI);
+		  var controlText = document.createElement('div');
+		  controlText.style.fontFamily='Arial,sans-serif';
+		  controlText.style.fontSize='13px';
+		  controlText.style.paddingLeft = '4px';
+		  controlText.style.paddingRight = '4px';
+		  controlText.innerHTML = '<b>Home<b>'
+		  controlUI.appendChild(controlText);
+
+		  // Setup click-event listener: simply set the map to London
+		  google.maps.event.addDomListener(controlUI, 'click', function() {
+			map.setZoom(12);
+			map.setCenter(San_Diego);
+			check()
+		  });
+		}
+
+	
+	function drawChart(marker,infowindow,data) {
+		var trans_data = google.visualization.arrayToDataTable(data);
+		
+		// Set chart options
+		var options = {'title':'Attitude Distribution',
+					   'width':300,
+					   'height':300};	               
+		var node        = document.createElement('div'),
+			chart       = new google.visualization.PieChart(node);
+				
+			chart.draw(trans_data, options);
+			infowindow.setContent(node);
+			infowindow.open(map,marker);
+    }
+	  
+	  function check(){
+			Balboa_Park_information.close();
+			Sunset_Cliffs_information.close();
+			Sandiego_Zoo_information.close();
+			Lajolla_Cove_information.close();
+			Sea_World_information.close();
+			Midway_Museum_information.close();
+			State_Historic_information.close();
+			Carlsbad_information.close();
+	  }
+	  
+    function initialize() {
+		
+		var mapOptions = {
+          center: San_Diego,
+          zoom: 12,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+		var roadStyles1 = [
+		{
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+		},
+		{
+			"featureType": "all",
+			"elementType": "labels.text.stroke",
+			"stylers": [
+				{
+					"color": "#000000"
+				},
+				{
+					"lightness": 13
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#144b53"
+				},
+				{
+					"lightness": 14
+				},
+				{
+					"weight": 1.4
+				}
+			]
+		},
+		{
+			"featureType": "landscape",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#08304b"
+				}
+			]
+		},
+		{
+			"featureType": "poi",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#0c4152"
+				},
+				{
+					"lightness": 5
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b434f"
+				},
+				{
+					"lightness": 25
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b3d51"
+				},
+				{
+					"lightness": 16
+				}
+			]
+		},
+		{
+			"featureType": "road.local",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "transit",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#146474"
+				}
+			]
+		},
+		{
+			"featureType": "water",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#021019"
+				}
+			]
+		}];	
+		var roadStyles2 = [
+    {
+        "featureType": "landscape.natural",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "color": "#e0efef"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "hue": "#1900ff"
+            },
+            {
+                "color": "#c0e8e8"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "lightness": 100
+            },
+            {
+                "visibility": "simplified"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "lightness": 700
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "all",
+        "stylers": [
+            {
+                "color": "#7dcdcd"
+            }
+        ]
+    }
+]
+		
+		var homeControlDiv = document.createElement('div');
+		var homeControl = new HomeControl(homeControlDiv, map);
+		homeControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
+		
+		var Balboa_Park = new google.maps.LatLng(32.73415, -117.14455);
+		var Balboa_Park_marker = new google.maps.Marker({
+			position: Balboa_Park,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Sunset_Cliffs = new google.maps.LatLng(32.72627, -117.25144);
+		var Sunset_Cliffs_marker = new google.maps.Marker({
+			position: Sunset_Cliffs,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Sandiego_Zoo = new google.maps.LatLng(32.73532, -117.14905);
+		var Sandiego_Zoo_marker = new google.maps.Marker({
+			position: Sandiego_Zoo,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Lajolla_Cove = new google.maps.LatLng(32.85060, -117.27143);
+		var Lajolla_Cove_marker = new google.maps.Marker({
+			position: Lajolla_Cove,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Sea_World = new google.maps.LatLng(32.76479, -117.22661);
+		var Sea_World_marker = new google.maps.Marker({
+			position: Sea_World,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Midway_Museum = new google.maps.LatLng(32.71374, -117.17513);
+		var Midway_Museum_marker = new google.maps.Marker({
+			position: Midway_Museum,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var State_Historic_Park = new google.maps.LatLng(32.75488, -117.19786);
+		var State_Historic_Park_marker = new google.maps.Marker({
+			position: State_Historic_Park,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Carlsbad = new google.maps.LatLng(33.1227955,-117.3172609);
+		var Carlsbad_marker = new google.maps.Marker({
+			position: Carlsbad,
+			map: map,
+			icon: 'marker/ylw-stars.png',
+			animation: google.maps.Animation.BOUNCE
+		});
+
+		google.maps.event.addListener(Balboa_Park_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Balboa_Park_marker.getPosition().lat()+0.015;
+			longitude = Balboa_Park_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Balboa_Park_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Balboa_Park_information,list_data[0]);
+			Balboa_Park_flag = 1;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Sunset_Cliffs_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Sunset_Cliffs_marker.getPosition().lat()+0.015;
+			longitude = Sunset_Cliffs_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Sunset_Cliffs_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Sunset_Cliffs_information,list_data[6]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 1;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Sandiego_Zoo_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Sandiego_Zoo_marker.getPosition().lat()+0.015;
+			longitude = Sandiego_Zoo_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Sandiego_Zoo_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Sandiego_Zoo_information,list_data[7]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 1;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Lajolla_Cove_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Lajolla_Cove_marker.getPosition().lat()+0.015;
+			longitude = Lajolla_Cove_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Lajolla_Cove_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Lajolla_Cove_information,list_data[3]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 1;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Sea_World_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Sea_World_marker.getPosition().lat()+0.015;
+			longitude = Sea_World_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Sea_World_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Sea_World_information,list_data[5]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 1;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Midway_Museum_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Midway_Museum_marker.getPosition().lat()+0.015;
+			longitude = Midway_Museum_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			Midway_Museum_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Midway_Museum_information,list_data[4]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 1;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(State_Historic_Park_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = State_Historic_Park_marker.getPosition().lat()+0.015;
+			longitude = State_Historic_Park_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			State_Historic_Park_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,State_Historic_information,list_data[2]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 1;
+			Carlsbad_flag = 0;
+		});
+		google.maps.event.addListener(Carlsbad_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = Carlsbad_marker.getPosition().lat()+0.015;
+			longitude = Carlsbad_marker.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			State_Historic_Park_marker.setAnimation(google.maps.Animation.DROP);
+			check();
+			drawChart(this,Carlsbad_information,list_data[1]);
+			Balboa_Park_flag = 0;
+			Sunset_Cliffs_flag = 0;
+			Sandiego_Zoo_flag = 0;
+			Lajolla_Cove_flag = 0;
+			Sea_World_flag = 0;
+			Midway_Museum_flag = 0;
+			State_Historic_flag = 0;
+			Carlsbad_flag = 1;
+		});
+		
+		google.maps.event.addListener(Balboa_Park_marker, 'mouseover', function() {
+			if(Balboa_Park_flag == 0)
+				Balboa_Park_infowindow.open(map,Balboa_Park_marker);
+		});
+		google.maps.event.addListener(Sunset_Cliffs_marker, 'mouseover', function() {
+			if(Sunset_Cliffs_flag == 0)
+				Sunset_Cliffs_infowindow.open(map,Sunset_Cliffs_marker)
+		});
+		google.maps.event.addListener(Sandiego_Zoo_marker, 'mouseover', function() {
+			if(Sandiego_Zoo_flag == 0)
+				Sandiego_Zoo_infowindow.open(map,Sandiego_Zoo_marker)
+		});
+		google.maps.event.addListener(Lajolla_Cove_marker, 'mouseover', function() {
+			if(Lajolla_Cove_flag == 0)
+				Lajolla_Cove_infowindow.open(map,Lajolla_Cove_marker)
+		});
+		google.maps.event.addListener(Sea_World_marker, 'mouseover', function() {
+			if(Sea_World_flag == 0)
+				Sea_World_infowindow.open(map,Sea_World_marker)
+		});
+		google.maps.event.addListener(Midway_Museum_marker, 'mouseover', function() {
+			if(Midway_Museum_flag == 0)
+				Midway_Museum_infowindow.open(map,Midway_Museum_marker)
+		});
+		google.maps.event.addListener(State_Historic_Park_marker, 'mouseover', function() {
+			if(State_Historic_flag == 0)
+				State_Historic_infowindow.open(map,State_Historic_Park_marker)
+		});
+		google.maps.event.addListener(Carlsbad_marker, 'mouseover', function() {
+			if(Carlsbad_flag == 0)
+				Carlsbad_infowindow.open(map,Carlsbad_marker)
+		});
+		
+		google.maps.event.addListener(Balboa_Park_marker, 'mouseout', function() {
+			Balboa_Park_infowindow.close()
+		});
+		google.maps.event.addListener(Sunset_Cliffs_marker, 'mouseout', function() {
+			Sunset_Cliffs_infowindow.close()
+		});
+		google.maps.event.addListener(Sandiego_Zoo_marker, 'mouseout', function() {
+			Sandiego_Zoo_infowindow.close()
+		});
+		google.maps.event.addListener(Lajolla_Cove_marker, 'mouseout', function() {
+			Lajolla_Cove_infowindow.close()
+		});
+		google.maps.event.addListener(Sea_World_marker, 'mouseout', function() {
+			Sea_World_infowindow.close()
+		});
+		google.maps.event.addListener(Midway_Museum_marker, 'mouseout', function() {
+			Midway_Museum_infowindow.close()
+		});
+		google.maps.event.addListener(State_Historic_Park_marker, 'mouseout', function() {
+			State_Historic_infowindow.close()
+		});
+		google.maps.event.addListener(Carlsbad_marker, 'mouseout', function() {
+			Carlsbad_infowindow.close()
+		});
+		
+		var styledMapOptions = {
+			name: 'San_Diego'
+		};
+		var RoadMapType = new google.maps.StyledMapType(
+			roadStyles1, styledMapOptions);
+		map.mapTypes.set('style', RoadMapType);
+		map.setMapTypeId('style');
+		
+	}
+	google.load('visualization', '1.0', {'packages':['corechart']});
+    </script>
+  </head>
+  <body onload="initialize()">
+  <div id="menu "class="navbar-static-top" style="height:6.5%; padding-top:0px; font-size:1.5em; background-color:#eeeeee">
+  <div class="container">
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li class="dropdown "><a href="#" id="drop1" data-toggle="dropdown" class="dropdown-toggle" role="button">Scenario<b class="caret"></b></a>
+            <ul class="dropdown-menu" aria-labelledby="drop1" style="background-color:#eeeeee">
+                <li ><a href="sentiment.html" role="menuitem">Sentiment</a></li>
+                <li ><a href="#" role="menuitem">Site</a></li>
+                <li ><a href="language.html" role="menuitem">Language</a></li>
+            </ul>
+        </li>
+        <li><a href="Info.html">Info</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div>
+</div>
+		<div id="map_canvas" style="width:100%; height:93.5%"></div>
+  </body>
+</html>

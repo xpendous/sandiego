@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>San Diego Language</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+	.dropdown-menu li>a{color:white; font-size:1.2em;} 
+    .dropdown-menu>li{padding:1px;}
+    .dropdown-menu li>a:hover{background:white;}
+    </style>
+    <script src="js/json2.js"></script>
+    <script src="js/sha1.js"></script>
+    <script src="js/jquery.js?1.4.2"></script>
+    <script src="js/jquery.couch.js?0.11.0"></script>
+    <script src="js/jquery.dialog.js?0.11.0"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+	<script	src="https://www.google.com/jsapi"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/richmarker.js"></script>
+    <script type="text/javascript">
+		var map;
+		var infoWindow = null;
+		var San_Diego = new google.maps.LatLng(32.760875, -117.114389);
+		var latitude;
+		var longitude;
+		var latlng;
+		var Ocean_Beach_information = new google.maps.InfoWindow();
+		var Pacific_Beach_information = new google.maps.InfoWindow();
+		var Hillcrest_information = new google.maps.InfoWindow();
+		var Mid_City_information = new google.maps.InfoWindow();
+		var La_Jolla_information = new google.maps.InfoWindow();
+		var Downtown_information = new google.maps.InfoWindow();
+		var Mission_Valley_information = new google.maps.InfoWindow();
+		var San_Ysidro_information = new google.maps.InfoWindow();
+		var Northeastern_information = new google.maps.InfoWindow();
+		var Overview_information = new google.maps.InfoWindow();
+		var list_data = new Array();
+		for(i=0;i<9;i++){
+			list_data[i] = new Array();
+		}			
+		var show_data = new Array();
+		var suburb = new Array();
+		for(i=0;i<9;i++){
+			suburb[i] = new Array();
+			for(j=0;j<33;j++){
+				suburb[i][j]=0;
+			}
+		}
+		var list_suburb = new Array("Ocean Beach","Pacific Beach","Hillcrest","Mid City","La Jolla","Downtown","Mission Valley","San Ysidro","Northeastern");
+		window.onload = get();
+
+	function get(){
+		$.getJSON("http://115.146.84.141:5984/lang_sub/_design/sub_lang5/_view/get_tweets?group_level=1&callback=?", handledata1);
+		$.getJSON("http://115.146.84.141:5984/lang_sub/_design/sub_lang5/_view/get_tweets?group_level=2&callback=?", handledata2);
+	
+		function handledata1(data){
+			//window.alert(data.rows[0].key,data.rows[0].value.uesr);
+			//window.alert(data);
+			number_of_people = new Array();
+			number_of_twitter = new Array();
+			for(i=0;i<9;i++){
+				number_of_people[i] = 0;
+				number_of_twitter[i] = 0;
+			}
+			total_length = data.rows.length;
+			//window.alert(total_length);
+			for(i=0;i<total_length;i++){
+				if(data.rows[i].key == "Ocean Beach"){//0
+					number_of_people[0] = data.rows[i].value.user;
+					number_of_twitter[0] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Pacific Beach"){//1
+					number_of_people[1] = data.rows[i].value.user;
+					number_of_twitter[1] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Hillcrest"){//2
+					number_of_people[2] = data.rows[i].value.user;
+					number_of_twitter[2] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Mid City"){//3
+					number_of_people[3] = data.rows[i].value.user;
+					number_of_twitter[3] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "La Jolla"){//4
+					number_of_people[4] = data.rows[i].value.user;
+					number_of_twitter[4] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Downtown" || data.rows[i].key == "North Park"){//5
+					number_of_people[5] = data.rows[i].value.user;
+					number_of_twitter[5] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Mission Valley" || data.rows[i].key == "Old Town"){//6
+					number_of_people[6] = data.rows[i].value.user;
+					number_of_twitter[6] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "San Ysidro" || data.rows[i].key == "Planicie"){//7
+					number_of_people[7] = data.rows[i].value.user;
+					number_of_twitter[7] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key == "Northeastern"){//8
+					number_of_people[8] = data.rows[i].value.user;
+					number_of_twitter[8] = data.rows[i].value.tweet;
+				}
+			}
+			show_data.push(["location","people","tweets"]);
+			for(i=0;i<9;i++){
+				//window.alert(number_of_people[i]);
+				//window.alert(number_of_twitter[i]);
+				show_data.push([list_suburb[i],number_of_people[i],number_of_twitter[i]]);
+			}
+		}
+		Array.prototype.unique3 = function(){
+			var res = [];
+			var json = {};
+			for(var i = 0; i < this.length; i++){
+				if(!json[this[i]]){
+					res.push(this[i]);
+					json[this[i]] = 1;
+				}
+			}
+			return res;
+		}
+		function findIndicesOfMax(inp, count) {
+			var outp = [];
+			for (var i = 0; i < inp.length; i++) {
+				outp.push(i); // add index to output array
+				if (outp.length > count) {
+					outp.sort(function(a, b) { return inp[b] - inp[a]; }); // descending sort the output array
+					outp.pop(); // remove the last index (index of smallest element in output array)
+				}
+			}
+			return outp;
+		}
+		function handledata2(data){
+			total_length = data.rows.length;
+			language = new Array();
+			for(i=0;i<total_length;i++){
+				language[i] = data.rows[i].key[1];
+			}
+			language = language.unique3();
+			number_of_language = language.length;
+			for(i=0;i<total_length;i++){
+				if(data.rows[i].key[0] == "Ocean Beach"){//0
+					suburb[0][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Pacific Beach"){//1
+					suburb[1][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Hillcrest"){//2
+					suburb[2][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Mid City"){//3
+					suburb[3][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "La Jolla" || data.rows[i].key[0] == "Del Mar"){//4
+					suburb[4][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Downtown" || data.rows[i].key[0] == "North Park"){//5
+					suburb[5][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Mission Valley" || data.rows[i].key[0] == "Old Town"){//6
+					suburb[6][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "San Ysidro" || data.rows[i].key[0] == "Planicie"){//7
+					suburb[7][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}else if(data.rows[i].key[0] == "Northeastern"){//8
+					suburb[8][language.indexOf(data.rows[i].key[1])] = data.rows[i].value.tweet;
+				}
+			}
+			//window.alert(suburb[5]);
+			for(i=0;i<9;i++){
+				rest_sum = 0;
+				list_data[i].push(['Language', 'Number']);
+				var indices = findIndicesOfMax(suburb[i], 3);
+				for (j=0;j<indices.length;j++){
+					if(suburb[i][indices[j]] != 0){
+						list_data[i].push([language[indices[j]],suburb[i][indices[j]]]);
+					}
+				}
+				for(k=0;k<33;k++){
+					if(indices.indexOf(k) == -1){
+						rest_sum = rest_sum + suburb[i][k];
+					}
+				}
+				if(rest_sum != 0){
+					list_data[i].push(["rest",rest_sum]);
+				}
+			}
+			//window.alert(list_data[5]);
+		}
+	}
+
+	function drawChart(marker,infowindow,data) {
+		var trans_data = google.visualization.arrayToDataTable(data);
+		
+		// Set chart options
+		var options = {'title':'Language Distribution',
+					   'width':400,
+					   'height':400};	               
+		var node        = document.createElement('div'),
+			chart       = new google.visualization.PieChart(node);
+				
+			chart.draw(trans_data, options);
+			if(data.length == 1){
+				infowindow.setContent("no tweets in this area");
+			}else{
+				infowindow.setContent(node);
+			}
+			infowindow.open(map,marker);
+    }
+		
+		
+	  
+    function initialize() {
+		var trans_data = new Array();
+		var compare_data = google.visualization.arrayToDataTable(show_data);
+		var options = {
+          chart: {
+            title: 'Compare',
+            subtitle: 'number of users and tweets',
+          },
+          bars: 'horizontal', // Required for Material Bar Charts.
+		  width:1000,
+		  height:640,
+		  bar: { groupWidth: "90%" }
+        };
+
+        var node        = document.createElement('div'),
+			chart       = new google.visualization.BarChart(node);
+			
+			chart.draw(compare_data, options);
+			
+		for(i=0;i<9;i++){
+			trans_data[i] = google.visualization.arrayToDataTable(list_data[i]);
+		}
+		var mapOptions = {
+          center: San_Diego,
+          zoom: 11,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+		myMapsId = 'zztGxRkF3tEA.kYRvgf7ggPZo';
+		new google.maps.KmlLayer({
+			map: map,
+			url: 'https://www.google.com/maps/d/kml?mid=' + myMapsId
+		});
+		var roadStyles1 = [
+		{
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#ffffff"
+            }
+        ]
+		},
+		{
+			"featureType": "all",
+			"elementType": "labels.text.stroke",
+			"stylers": [
+				{
+					"color": "#000000"
+				},
+				{
+					"lightness": 13
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "administrative",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#144b53"
+				},
+				{
+					"lightness": 14
+				},
+				{
+					"weight": 1.4
+				}
+			]
+		},
+		{
+			"featureType": "landscape",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#08304b"
+				}
+			]
+		},
+		{
+			"featureType": "poi",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#0c4152"
+				},
+				{
+					"lightness": 5
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b434f"
+				},
+				{
+					"lightness": 25
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "geometry.stroke",
+			"stylers": [
+				{
+					"color": "#0b3d51"
+				},
+				{
+					"lightness": 16
+				}
+			]
+		},
+		{
+			"featureType": "road.local",
+			"elementType": "geometry",
+			"stylers": [
+				{
+					"color": "#000000"
+				}
+			]
+		},
+		{
+			"featureType": "transit",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#146474"
+				}
+			]
+		},
+		{
+			"featureType": "water",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#021019"
+				}
+			]
+		}];	
+		var roadStyles2 = [
+		{
+			"featureType": "administrative",
+			"elementType": "labels.text.fill",
+			"stylers": [
+				{
+					"color": "#444444"
+				}
+			]
+		},
+		{
+			"featureType": "administrative.country",
+			"elementType": "geometry.fill",
+			"stylers": [
+				{
+					"visibility": "on"
+				}
+			]
+		},
+		{
+			"featureType": "landscape",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#f2f2f2"
+				}
+			]
+		},
+		{
+			"featureType": "poi",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "road",
+			"elementType": "all",
+			"stylers": [
+				{
+					"saturation": -100
+				},
+				{
+					"lightness": 45
+				}
+			]
+		},
+		{
+			"featureType": "road.highway",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "simplified"
+				}
+			]
+		},
+		{
+			"featureType": "road.arterial",
+			"elementType": "labels.icon",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "transit",
+			"elementType": "all",
+			"stylers": [
+				{
+					"visibility": "off"
+				}
+			]
+		},
+		{
+			"featureType": "water",
+			"elementType": "all",
+			"stylers": [
+				{
+					"color": "#4694ec"
+				},
+				{
+					"visibility": "on"
+				}
+			]
+		}
+		];
+		var roadStyles3 = 
+		[
+    {
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "saturation": 36
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 40
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "visibility": "off"
+            },
+            {
+                "color": "#000000"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "lightness": 20
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            },
+            {
+                "weight": 1.2
+            },
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "color": "#dbdbdb"
+            }
+        ]
+    },
+    {
+        "featureType": "landscape",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#212325"
+            },
+            {
+                "lightness": 20
+            }
+        ]
+    },
+    {
+        "featureType": "landscape.man_made",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#6b2f2f"
+            },
+            {
+                "lightness": 21
+            },
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "simplified"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "color": "#858585"
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            },
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 29
+            },
+            {
+                "weight": 0.2
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 18
+            },
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 19
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            }
+        ]
+    }
+]
+		
+		var homeControlDiv = document.createElement('div');
+		var homeControl = new HomeControl(homeControlDiv, map);
+		homeControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
+	  
+		var centerControlDiv = document.createElement('div');
+		var centerControl = new CenterControl(centerControlDiv, map);
+		centerControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(centerControlDiv);
+		
+		var styledMapOptions = {
+			name: 'San_Diego'
+		};
+		var RoadMapType = new google.maps.StyledMapType(
+			roadStyles3, styledMapOptions);
+		map.mapTypes.set('style', RoadMapType);
+		map.setMapTypeId('style');
+		
+		latitude1 = San_Diego.lat()-0.18;
+		longitude1 = San_Diego.lng();
+		latlng1 = new google.maps.LatLng(latitude1, longitude1);
+		
+        marker = new RichMarker({
+          position: latlng1,
+          map: map,
+          draggable: true,
+          content: node,
+		  visible : false
+          });
+		
+		var Ocean_Beach = new google.maps.LatLng(32.738134, -117.221057);
+		var Ocean_Beach_marker = new google.maps.Marker({
+			position: Ocean_Beach,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Pacific_Beach = new google.maps.LatLng(32.790389, -117.237022);
+		var Pacific_Beach_marker = new google.maps.Marker({
+			position: Pacific_Beach,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Hillcrest = new google.maps.LatLng(32.737700, -117.152135);
+		var Hillcrest_marker = new google.maps.Marker({
+			position: Hillcrest,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Mid_City = new google.maps.LatLng(32.756181, -117.084415);
+		var Mid_City_marker = new google.maps.Marker({
+			position: Mid_City,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});		
+		var La_Jolla = new google.maps.LatLng(32.871597, -117.229468);
+		var La_Jolla_marker = new google.maps.Marker({
+			position: La_Jolla,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+
+		var Downtown = new google.maps.LatLng(32.713656, -117.159516);
+		var Downtown_marker = new google.maps.Marker({
+			position: Downtown,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Mission_Valley = new google.maps.LatLng(32.777833, -117.136685);
+		var Mission_Valley_marker = new google.maps.Marker({
+			position: Mission_Valley,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var San_Ysidro = new google.maps.LatLng(32.555824, -117.020452);
+		var San_Ysidro_marker = new google.maps.Marker({
+			position: San_Ysidro,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		var Northeastern = new google.maps.LatLng(32.903568, -117.117136);
+		var Northeastern_marker = new google.maps.Marker({
+			position: Northeastern,
+			map: map,
+			animation: google.maps.Animation.BOUNCE
+		});
+		google.maps.event.addListener(Ocean_Beach_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Ocean_Beach_information,list_data[0]);
+		});
+		google.maps.event.addListener(Pacific_Beach_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Pacific_Beach_information,list_data[1]);
+		});
+		google.maps.event.addListener(Hillcrest_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Hillcrest_information,list_data[2]);
+		});
+		google.maps.event.addListener(Mid_City_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Mid_City_information,list_data[3]);
+		});
+		google.maps.event.addListener(La_Jolla_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,La_Jolla_information,list_data[4]);
+		});
+		google.maps.event.addListener(Downtown_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Downtown_information,list_data[5]);
+		});
+		google.maps.event.addListener(Mission_Valley_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Mission_Valley_information,list_data[6]);
+		});
+		google.maps.event.addListener(San_Ysidro_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,San_Ysidro_information,list_data[7]);
+		});
+		google.maps.event.addListener(Northeastern_marker, 'click', function() {
+			map.setZoom(14);
+			latitude = this.getPosition().lat()+0.015;
+			longitude = this.getPosition().lng();
+			latlng = new google.maps.LatLng(latitude, longitude);
+			map.setCenter(latlng);
+			this.setAnimation(google.maps.Animation.DROP);
+			drawChart(this,Northeastern_information,list_data[8]);
+		});
+		
+		function toggleVisible() {
+			marker.setVisible(!marker.getVisible());
+		}
+		function HomeControl(controlDiv, map) {
+		  controlDiv.style.padding = '5px';
+		  var controlUI = document.createElement('div');
+		  controlUI.style.backgroundColor = 'white';
+		  controlUI.style.border='1px solid';
+		  controlUI.style.cursor = 'pointer';
+		  controlUI.style.textAlign = 'center';
+		  controlUI.title = 'Set map to center';
+		  controlDiv.appendChild(controlUI);
+		  var controlText = document.createElement('div');
+		  controlText.style.fontFamily='Arial,sans-serif';
+		  controlText.style.fontSize='13px';
+		  controlText.style.paddingLeft = '4px';
+		  controlText.style.paddingRight = '4px';
+		  controlText.innerHTML = '<b>Home<b>'
+		  controlUI.appendChild(controlText);
+
+		  // Setup click-event listener: simply set the map to London
+		  google.maps.event.addDomListener(controlUI, 'click', function() {
+			map.setZoom(10);
+			map.setCenter(San_Diego);
+			Ocean_Beach_information.close();
+			Pacific_Beach_information.close();
+			Hillcrest_information.close();
+			Mid_City_information.close();
+			La_Jolla_information.close();
+			Downtown_information.close();
+			Mission_Valley_information.close();
+			San_Ysidro_information.close();
+			Northeastern_information.close();
+		  });
+		}
+		
+		function CenterControl(controlDiv, map) {		  
+		// Set CSS for the control border
+		var controlUI = document.createElement('div');
+		controlUI.style.backgroundColor = '#fff';
+		controlUI.style.border = '2px solid #fff';
+		controlUI.style.borderRadius = '3px';
+		controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+		controlUI.style.cursor = 'pointer';
+		controlUI.style.marginBottom = '22px';
+		controlUI.style.marginLeft = '20px';
+		controlUI.style.textAlign = 'center';
+		controlUI.title = 'Click to recenter the map';
+		controlDiv.appendChild(controlUI);
+
+		// Set CSS for the control interior
+		var controlText = document.createElement('div');
+		controlText.style.color = 'rgb(25,25,25)';
+		controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+		controlText.style.fontSize = '16px';
+		controlText.style.lineHeight = '38px';
+		controlText.style.paddingLeft = '5px';
+		controlText.style.paddingRight = '5px';
+		controlText.innerHTML = 'Overview';
+		controlUI.appendChild(controlText);
+
+		google.maps.event.addDomListener(controlUI, 'click', function() {
+			map.setZoom(11);
+			map.setCenter(San_Diego);
+			Ocean_Beach_information.close();
+			Pacific_Beach_information.close();
+			Hillcrest_information.close();
+			Mid_City_information.close();
+			La_Jolla_information.close();
+			Downtown_information.close();
+			Mission_Valley_information.close();
+			San_Ysidro_information.close();
+			Northeastern_information.close();
+			toggleVisible();
+		});
+	}
+	}
+	google.load('visualization', '1.0', {'packages':['corechart']});
+    </script>
+  </head>
+  <body onload="initialize()">
+		
+<div id="menu "class="navbar-static-top" style="height:6.5%; padding-top:0px; font-size:1.5em; background-color:#eeeeee">
+  <div class="container">
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li class="dropdown "><a href="#" id="drop1" data-toggle="dropdown" class="dropdown-toggle" role="button">Scenario<b class="caret"></b></a>
+            <ul class="dropdown-menu" aria-labelledby="drop1" style="background-color:#eeeeee;">
+                <li ><a href="sentiment.html" role="menuitem">Sentiment</a></li>
+                <li ><a href="site.html" role="menuitem">Site</a></li>
+                <li ><a href="#" role="menuitem">Language</a></li>
+            </ul>
+        </li>
+        <li><a href="Info.html">Info</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div>
+</div>
+<div id="map_canvas" style="width:100%; height:93.5%"></div>
+  </body>
+</html>
